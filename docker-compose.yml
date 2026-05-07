@@ -1,0 +1,99 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: translatedb
+    environment:
+      POSTGRES_DB: translatedb
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: translateredis
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  qdrant:
+    image: qdrant/qdrant:latest
+    container_name: translationqdrant
+    volumes:
+      - qdrant_data:/qdrant/storage
+
+  ai-service:
+    build:
+      context: ../GranduatedProject
+      dockerfile: Dockerfile
+    container_name: translationai
+    volumes:
+      - ../GranduatedProject/models:/app/models
+    environment:
+      - MODEL_PATH=/app/models/m2m100_418M
+      - HOST=0.0.0.0
+      - PORT=8000
+      - TORCH_NUM_THREADS=2
+      - NUM_BEAMS=1
+      - MAX_LENGTH=256
+    depends_on:
+      - qdrant
+    restart: unless-stopped
+
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: translationbackend
+    environment:
+      - SPRING_PROFILES_ACTIVE=prod
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_NAME=translatedb
+      - DB_USER=postgres
+      - DB_PASSWORD=postgres
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - QDRANT_HOST=qdrant
+      - QDRANT_PORT=6333
+      - AI_SERVICE_URL=http://ai-service:8000
+      - JWT_SECRET=${JWT_SECRET:-mySecretKeyForJWTTokenGenerationAndValidation2024}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      - qdrant
+      - ai-service
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: ./translate-platform
+      dockerfile: Dockerfile
+    container_name: translationfrontend
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+  redis_data:
+  qdrant_data:
+
+networks:
+  default:
+    name: translation-network
