@@ -1,0 +1,12 @@
+[
+    {"source": "基于Transformer的交互式语言翻译平台", "target": "Transformer-based interactive language translation platform"},
+    {"source": "文本润色", "target": "text polishing"},
+    {"source": "上下文感知翻译", "target": "context-aware translation"},
+    {"source": "向量数据库", "target": "vector database"},
+    {"source": "实时协同翻译", "target": "real-time collaborative translation"},
+    {"source": "翻译记忆库", "target": "translation memory library"},
+    {"source": "语法纠错", "target": "grammar correction"},
+    {"source": "风格适配", "target": "style adaptation"},
+    {"source": "前后端分离架构", "target": "front-end and back-end separation architecture"},
+    {"source": "模型量化", "target": "model quantization"}
+]
