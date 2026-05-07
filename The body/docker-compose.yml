@@ -35,11 +35,11 @@ services:
 
   ai-service:
     build:
-      context: ../GranduatedProject
+      context: ../GraduatedProject-AIservice
       dockerfile: Dockerfile
     container_name: translationai
     volumes:
-      - ../GranduatedProject/models:/app/models
+      - ../GraduatedProject-AIservice/models:/app/models
     environment:
       - MODEL_PATH=/app/models/m2m100_418M
       - HOST=0.0.0.0
